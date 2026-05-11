@@ -5,21 +5,21 @@
 class Atlan < Formula
   desc "Atlan CLI"
   homepage "https://developer.atlan.com/sdks/cli"
-  version "0.1.16"
+  version "0.2.0"
   license "Apache-2.0"
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/atlanhq/atlan-cli-releases/releases/download/v0.1.16/atlan_Darwin_amd64.tar.gz"
-      sha256 "42e0084944bb4ae7fd0f93d220803bab9c10f0b42d87b52a232348063e45c6c7"
+      url "https://github.com/atlanhq/atlan-cli-releases/releases/download/v0.2.0/atlan_Darwin_amd64.tar.gz"
+      sha256 "4c09e49d569edc7e3329c7fae028fc5b7b2d53d4b1ee99a602ecad7685c336f9"
 
       define_method(:install) do
         bin.install "atlan"
       end
     end
     if Hardware::CPU.arm?
-      url "https://github.com/atlanhq/atlan-cli-releases/releases/download/v0.1.16/atlan_Darwin_arm64.tar.gz"
-      sha256 "64ab4e04b9e5ca443623859314eacd5773a85dae97ba999abbe91ba6046c8db7"
+      url "https://github.com/atlanhq/atlan-cli-releases/releases/download/v0.2.0/atlan_Darwin_arm64.tar.gz"
+      sha256 "77bea10e3afe531b0d1bd48fa94b6f705ce0a5902a74fdeffd3acd9098f2cbd0"
 
       define_method(:install) do
         bin.install "atlan"
@@ -29,15 +29,15 @@ class Atlan < Formula
 
   on_linux do
     if Hardware::CPU.intel? && Hardware::CPU.is_64_bit?
-      url "https://github.com/atlanhq/atlan-cli-releases/releases/download/v0.1.16/atlan_Linux_amd64.tar.gz"
-      sha256 "d7bc74f130ab9e752acf75f0cdeeb3e764c12a863ab6e7c0896235c366b0a774"
+      url "https://github.com/atlanhq/atlan-cli-releases/releases/download/v0.2.0/atlan_Linux_amd64.tar.gz"
+      sha256 "fbce465be70bda0929c8b70f81b80a3dd0e07547c1b936b139547893327fa677"
       define_method(:install) do
         bin.install "atlan"
       end
     end
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/atlanhq/atlan-cli-releases/releases/download/v0.1.16/atlan_Linux_arm64.tar.gz"
-      sha256 "f20bf3cf2c71570215c026b5822285aaef65979556fded537a35934e3cff7750"
+      url "https://github.com/atlanhq/atlan-cli-releases/releases/download/v0.2.0/atlan_Linux_arm64.tar.gz"
+      sha256 "fef745a21653fe89949467f16f0c81b3439dbbbd5addc9e64b8b09cf9f318f07"
       define_method(:install) do
         bin.install "atlan"
       end
