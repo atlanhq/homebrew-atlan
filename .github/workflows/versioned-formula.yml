@@ -1,0 +1,80 @@
+# Add the versioned Homebrew formula automatically (BLDX-1519)
+#
+# The last manual step of the atlan-cli release. GoReleaser (from atlan-cli's
+# create-release.yml) pushes the rolling `Formula/atlan.rb` to the `goreleaser`
+# branch and opens a PR. A human then had to hand-add `Formula/atlan@X.Y.Z.rb`
+# (an exact copy of atlan.rb with the class renamed AtlanATXYZ). This workflow
+# does that commit automatically, onto the same `goreleaser` branch, so it lands
+# in the open GoReleaser PR — ready for a maintainer to merge.
+#
+# A maintainer still merges the PR; this only prepares it.
+name: Add versioned Homebrew formula
+
+on:
+  push:
+    branches: [goreleaser]
+    # Only react to GoReleaser's rolling-formula update. Our own commit below adds
+    # Formula/atlan@X.Y.Z.rb (not atlan.rb), so it does not re-trigger this workflow.
+    paths:
+      - Formula/atlan.rb
+
+permissions:
+  contents: write
+
+jobs:
+  add-versioned-formula:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout goreleaser branch
+        uses: actions/checkout@v4
+        with:
+          ref: goreleaser
+          fetch-depth: 0
+
+      - name: Generate versioned formula
+        id: gen
+        run: |
+          set -euo pipefail
+
+          # Read the version GoReleaser wrote into the rolling formula.
+          VERSION="$(sed -n 's/^[[:space:]]*version "\(.*\)".*/\1/p' Formula/atlan.rb | head -1)"
+          if [ -z "$VERSION" ]; then
+            echo "::error::could not read version from Formula/atlan.rb"; exit 1
+          fi
+
+          # Homebrew versioned-formula class name: AtlanAT<version-without-dots>
+          # e.g. 0.5.1 -> AtlanAT051, 0.1.10 -> AtlanAT0110.
+          CLASS="AtlanAT$(printf '%s' "$VERSION" | tr -d '.')"
+          TARGET="Formula/atlan@${VERSION}.rb"
+          echo "version=$VERSION class=$CLASS target=$TARGET"
+
+          if [ -f "$TARGET" ]; then
+            echo "$TARGET already exists — nothing to do."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Versioned formula = exact copy of the rolling formula with ONLY the
+          # class line renamed.
+          sed "s/^class Atlan < Formula/class ${CLASS} < Formula/" Formula/atlan.rb > "$TARGET"
+
+          # Fail loud if the rename didn't take (rolling formula not in the
+          # expected `class Atlan < Formula` shape).
+          if ! grep -q "^class ${CLASS} < Formula" "$TARGET"; then
+            echo "::error::class rename failed — Formula/atlan.rb is not in the expected 'class Atlan < Formula' shape"
+            rm -f "$TARGET"; exit 1
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push versioned formula
+        if: steps.gen.outputs.changed == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add "${{ steps.gen.outputs.target }}"
+          git commit -m "chore: add versioned formula atlan@${{ steps.gen.outputs.version }}"
+          git push origin HEAD:goreleaser
